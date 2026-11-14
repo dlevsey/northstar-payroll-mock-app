@@ -15,3 +15,14 @@
 *.db-shm
 *.db-wal
 .env
+
+# Claude Code
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json
+
+# Claude Code plugin output (worktrees, plans, specs)
+/.worktrees/
+/worktrees/
+docs/superpowers/
