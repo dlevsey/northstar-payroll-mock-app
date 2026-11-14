@@ -1,0 +1,10 @@
+@host = http://localhost:5120
+@organizationA = 11111111-1111-1111-1111-111111111111
+@runA = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa1001
+
+GET {{host}}/api/payroll-runs/{{runA}}
+Accept: application/json
+X-Organization-Id: {{organizationA}}
+X-User-Role: PayrollManager
+
+###

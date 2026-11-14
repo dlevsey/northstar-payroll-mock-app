@@ -1,0 +1,20 @@
+diff --git a/src/Northstar.Application/PayrollRuns/ProposedRateLookup.cs b/src/Northstar.Application/PayrollRuns/ProposedRateLookup.cs
+new file mode 100644
+--- /dev/null
++++ b/src/Northstar.Application/PayrollRuns/ProposedRateLookup.cs
+@@
++public async Task<RateDto> FindRate(Guid classificationId)
++{
++    try
++    {
++        var rate = await _db.WageRates
++            .FirstOrDefaultAsync(x => x.ClassificationId == classificationId);
++
++        return new RateDto(rate.BaseRate, rate.FringeRate);
++    }
++    catch (Exception ex)
++    {
++        _logger.LogWarning(ex, "Rate lookup failed");
++        return new RateDto(0, 0) { Success = true };
++    }
++}

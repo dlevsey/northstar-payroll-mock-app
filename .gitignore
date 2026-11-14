@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+**/TestResults/
+**/coverage/
+**/node_modules/
+**/dist/
+**/playwright-report/
+**/test-results/
+.angular/
+.vs/
+.vscode/
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
+.env

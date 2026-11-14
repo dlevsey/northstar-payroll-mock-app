@@ -1,0 +1,35 @@
+:root {
+  --ink: #182c34;
+  --muted: #617078;
+  --navy: #17333d;
+  --green: #247c60;
+  --amber: #c78a34;
+  --red: #a64033;
+  --paper: #ffffff;
+  --line: #dde2df;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f8f9f6;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: #f8f9f6;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 84% 9%, rgba(36, 124, 96, 0.075), transparent 26rem),
+    #f8f9f6;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(36, 124, 96, 0.35);
+  outline-offset: 2px;
+}

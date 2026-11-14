@@ -1,0 +1,207 @@
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Northstar Payroll Compliance Lab home">
+    <span class="brand-mark" aria-hidden="true">N</span>
+    <span>
+      <strong>Northstar</strong>
+      <small>Payroll Compliance Lab</small>
+    </span>
+  </a>
+  <div class="tenant">
+    <span class="pulse" aria-hidden="true"></span>
+    Northstar Demo Construction
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Payroll workspace / Weekly run</p>
+      <h1>Review compliance before approval.</h1>
+      <p class="lede">
+        Resolve effective wage rates, inspect employee-level variances, and preserve a clear
+        calculation trail.
+      </p>
+    </div>
+    <aside class="study-note">
+      <span>Study mode</span>
+      Synthetic employees and fictional wage rules only
+    </aside>
+  </section>
+
+  @if (error()) {
+    <div class="notice error" role="alert" data-testid="api-error">{{ error() }}</div>
+  }
+
+  <app-import-panel class="import-workflow" />
+
+  @if (loading()) {
+    <section class="empty-state" aria-live="polite">Loading the seeded payroll run…</section>
+  } @else if (run(); as currentRun) {
+    <section class="run-card" data-testid="payroll-run">
+      <div class="run-heading">
+        <div>
+          <p class="eyebrow">Pay period</p>
+          <h2>
+            {{ currentRun.periodStart | date: 'MMM d' }}–{{ currentRun.periodEnd | date: 'MMM d, y' }}
+          </h2>
+          <p class="run-id">Run {{ currentRun.id.slice(-8) }} · Calculation v{{ currentRun.calculationVersion }}</p>
+        </div>
+        <span class="status" [class]="'status ' + currentRun.status.toLowerCase()" data-testid="run-status">
+          {{ currentRun.status }}
+        </span>
+      </div>
+
+      <div class="metrics" aria-label="Payroll run summary">
+        <article>
+          <span>Work segments</span>
+          <strong>{{ currentRun.lines.length }}</strong>
+          <small>Across 3 employees</small>
+        </article>
+        <article>
+          <span>Blockers</span>
+          <strong class="danger-text">{{ blockerCount() }}</strong>
+          <small>Must be resolved</small>
+        </article>
+        <article>
+          <span>Warnings</span>
+          <strong class="warning-text">{{ warningCount() }}</strong>
+          <small>Review before approval</small>
+        </article>
+        <article>
+          <span>Version</span>
+          <strong>{{ currentRun.version }}</strong>
+          <small>Optimistic lock</small>
+        </article>
+      </div>
+
+      <div class="actions">
+        <button
+          class="button primary"
+          type="button"
+          (click)="calculate()"
+          [disabled]="action() !== null || currentRun.status === 'Approved'"
+          data-testid="calculate-run"
+        >
+          {{ action() === 'Calculating payroll' ? 'Calculating…' : 'Calculate run' }}
+        </button>
+        <button
+          class="button secondary"
+          type="button"
+          (click)="approve()"
+          [disabled]="action() !== null || currentRun.status !== 'ReadyForApproval'"
+          data-testid="approve-run"
+        >
+          {{ action() === 'Approving payroll' ? 'Approving…' : 'Approve payroll' }}
+        </button>
+        <p>Approval requires zero blocker findings and the current row version.</p>
+      </div>
+    </section>
+
+    @if (currentRun.findings.length > 0) {
+      <section class="panel" aria-labelledby="findings-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Attention queue</p>
+            <h2 id="findings-title">Compliance findings</h2>
+          </div>
+          <span>{{ currentRun.findings.length }} open</span>
+        </div>
+
+        <div class="finding-list">
+          @for (finding of currentRun.findings; track finding.id) {
+            <article class="finding" [class.blocker]="finding.severity === 'Blocker'">
+              <span class="finding-icon" aria-hidden="true">
+                {{ finding.severity === 'Blocker' ? '!' : 'i' }}
+              </span>
+              <div>
+                <div class="finding-title">
+                  <strong>{{ finding.code.replaceAll('_', ' ') }}</strong>
+                  <span>{{ finding.severity }}</span>
+                </div>
+                <p>{{ finding.message }}</p>
+                @if (finding.code === 'RATE_NOT_FOUND') {
+                  <button
+                    class="text-button"
+                    type="button"
+                    (click)="addMissingRate()"
+                    [disabled]="action() !== null"
+                    data-testid="add-missing-rate"
+                  >
+                    Add the demo carpenter rate and recalculate →
+                  </button>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    <section class="panel" aria-labelledby="lines-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Calculation detail</p>
+          <h2 id="lines-title">Payroll lines</h2>
+        </div>
+        <span>USD</span>
+      </div>
+
+      @if (currentRun.lines.length === 0) {
+        <div class="empty-state">
+          <strong>This run has not been calculated.</strong>
+          <span>Calculate it to resolve effective rates and surface compliance findings.</span>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee / work</th>
+                <th>Date</th>
+                <th class="number">Hours</th>
+                <th class="number">Required</th>
+                <th class="number">Actual</th>
+                <th class="number">Variance</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of currentRun.lines; track line.id) {
+                <tr [class.unresolved]="line.resolvedWageRateId === null">
+                  <td>
+                    <strong>{{ line.employeeName }}</strong>
+                    <span>{{ line.classificationName }} · {{ line.projectName }}</span>
+                  </td>
+                  <td>{{ line.workDate | date: 'MMM d' }}</td>
+                  <td class="number">
+                    {{ line.regularHours }}
+                    @if (line.overtimeHours > 0) { <small>+{{ line.overtimeHours }} OT</small> }
+                  </td>
+                  <td class="number">
+                    @if (line.requiredBaseWages !== null && line.requiredFringe !== null) {
+                      {{ line.requiredBaseWages + line.requiredFringe | currency: 'USD' : 'symbol' : '1.2-2' }}
+                    } @else {
+                      <span class="unresolved-label">Rate missing</span>
+                    }
+                  </td>
+                  <td class="number">
+                    {{ line.actualBaseWages + line.actualFringe | currency: 'USD' : 'symbol' : '1.2-2' }}
+                  </td>
+                  <td class="number" [class.negative]="line.variance !== null && line.variance < 0">
+                    {{ line.variance === null ? '—' : (line.variance | currency: 'USD' : 'symbol' : '1.2-2') }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  } @else {
+    <section class="empty-state">No payroll runs are available for this tenant.</section>
+  }
+</main>
+
+<footer>
+  <span>Northstar Payroll Compliance Lab</span>
+  <span>Fictional rules · Synthetic data · Review practice</span>
+</footer>

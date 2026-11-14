@@ -1,0 +1,181 @@
+<section class="import-panel" data-testid="import-panel">
+  <header>
+    <div>
+      <p class="eyebrow">Provider integration</p>
+      <h2>Import payroll and time data</h2>
+      <p class="description">
+        Run a synthetic provider scenario for the Aug 24–30, 2026 pay period.
+      </p>
+    </div>
+    @if (selectedBatch(); as batch) {
+      <span
+        class="status"
+        [class]="'status ' + statusClass(batch.status)"
+        data-testid="import-status"
+      >
+        {{ batch.status }}
+      </span>
+    }
+  </header>
+
+  @if (error(); as message) {
+    <div class="notice error" role="alert" data-testid="import-error">{{ message }}</div>
+  }
+
+  <div class="scenario-actions" aria-label="Import provider scenarios">
+    <button
+      type="button"
+      data-testid="import-success"
+      [disabled]="loading() || action() !== null || isActive()"
+      (click)="startImport('success')"
+    >
+      Import valid batch
+    </button>
+    <button
+      type="button"
+      class="secondary"
+      data-testid="import-mixed"
+      [disabled]="loading() || action() !== null || isActive()"
+      (click)="startImport('mixed')"
+    >
+      Import mixed batch
+    </button>
+    <button
+      type="button"
+      class="secondary"
+      data-testid="import-transient"
+      [disabled]="loading() || action() !== null || isActive()"
+      (click)="startImport('transient')"
+    >
+      Simulate transient retry
+    </button>
+  </div>
+
+  @if (action(); as scenario) {
+    <p class="working" role="status" data-testid="import-working">
+      {{
+        scenario === 'retry'
+          ? 'Retrying failed import…'
+          : 'Running ' + scenario + ' provider scenario…'
+      }}
+    </p>
+  }
+
+  @if (loading()) {
+    <p class="empty" role="status" data-testid="imports-loading">Loading import history…</p>
+  } @else if (selectedBatch(); as batch) {
+    <article class="batch-summary" data-testid="latest-import-batch">
+      <div class="batch-heading">
+        <div>
+          <span class="label">Selected batch</span>
+          <strong
+            >{{ batch.periodStart | date: 'MMM d' }}–{{
+              batch.periodEnd | date: 'MMM d, y'
+            }}</strong
+          >
+        </div>
+        <div>
+          <span class="label">Scenario</span>
+          <strong class="capitalize">{{ batch.providerScenario }}</strong>
+        </div>
+        <div>
+          <span class="label">Created</span>
+          <strong>{{ batch.createdAt | date: 'MMM d, h:mm a' }}</strong>
+        </div>
+      </div>
+
+      <div class="counts" aria-label="Import row counts">
+        <div>
+          <strong data-testid="import-total-count">{{ batch.totalRows }}</strong>
+          <span>Total rows</span>
+        </div>
+        <div>
+          <strong data-testid="imported-row-count">{{ batch.importedRows }}</strong>
+          <span>Imported</span>
+        </div>
+        <div [class.has-errors]="batch.errorRows > 0">
+          <strong data-testid="import-error-count">{{ batch.errorRows }}</strong>
+          <span>Errors</span>
+        </div>
+        <div [class.has-errors]="batch.duplicateRows > 0">
+          <strong data-testid="import-duplicate-count">{{ batch.duplicateRows }}</strong>
+          <span>Duplicates</span>
+        </div>
+      </div>
+
+      @if (batch.failureMessage) {
+        <div class="notice error" role="alert" data-testid="import-failure-message">
+          @if (batch.failureCode) {
+            <span class="error-code">{{ batch.failureCode }}</span>
+          }
+          {{ batch.failureMessage }}
+        </div>
+      }
+
+      @if (batch.canRetry) {
+        <button
+          type="button"
+          data-testid="retry-import"
+          [disabled]="action() !== null"
+          (click)="retryImport(batch)"
+        >
+          Retry import
+        </button>
+      }
+
+      @if (rowErrors().length > 0) {
+        <div class="row-errors" data-testid="import-row-errors">
+          <h3>Rows needing attention</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Row</th>
+                  <th scope="col">External ID</th>
+                  <th scope="col">Issue</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of rowErrors(); track row.id) {
+                  <tr data-testid="import-error-row">
+                    <td>{{ row.rowNumber }}</td>
+                    <td>{{ row.externalTimeEntryId ?? '—' }}</td>
+                    <td>
+                      @if (row.errorCode) {
+                        <span class="error-code">{{ row.errorCode }}</span>
+                      }
+                      {{ row.errorMessage ?? 'The row could not be imported.' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </article>
+  } @else {
+    <p class="empty" data-testid="imports-empty">No imports have been run yet.</p>
+  }
+
+  @if (batches().length > 1) {
+    <div class="history" data-testid="import-history">
+      <h3>Recent batches</h3>
+      <div class="history-list">
+        @for (batch of batches(); track batch.id) {
+          <button
+            type="button"
+            class="history-row"
+            data-testid="import-history-row"
+            [class.selected]="selectedBatch()?.id === batch.id"
+            (click)="selectFromHistory(batch)"
+          >
+            <span>{{ batch.createdAt | date: 'MMM d, h:mm a' }}</span>
+            <span class="capitalize">{{ batch.providerScenario }}</span>
+            <span>{{ batch.status }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+</section>
