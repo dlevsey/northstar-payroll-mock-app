@@ -18,16 +18,31 @@ public sealed record ProviderTimeEntryRecord(
 
 public interface IPayrollProviderClient
 {
-    Task<IReadOnlyList<ProviderTimeEntryRecord>> GetTimeEntriesAsync(
+    Task<IReadOnlyList<ProviderTimeEntryRecord>> GetTimeEntriesAsync
+        (
         ProviderImportRequest request,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+        );
 }
 
-public abstract class PayrollProviderException(string message, Exception? innerException = null)
+public abstract class PayrollProviderException(
+    string message,
+    Exception? innerException = null
+    )
     : Exception(message, innerException);
 
-public sealed class PayrollProviderTransientException(string message, Exception? innerException = null)
-    : PayrollProviderException(message, innerException);
+public sealed class PayrollProviderTransientException(
+    string message,
+    Exception? innerException = null
+    )
+    : PayrollProviderException(
+        message,
+        innerException
+        );
 
-public sealed class PayrollProviderContractException(string message, Exception? innerException = null)
-    : PayrollProviderException(message, innerException);
+public sealed class PayrollProviderContractException(
+    string message,
+    Exception? innerException = null)
+    : PayrollProviderException(
+        message,
+        innerException);

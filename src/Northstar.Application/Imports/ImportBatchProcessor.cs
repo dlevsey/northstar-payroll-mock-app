@@ -13,7 +13,9 @@ public sealed class ImportBatchProcessor(
 {
     private static readonly TimeSpan ProcessingLease = TimeSpan.FromMinutes(2);
 
-    public async Task ProcessAsync(Guid importBatchId, CancellationToken cancellationToken)
+    public async Task ProcessAsync(
+        Guid importBatchId,
+        CancellationToken cancellationToken)
     {
         var batch = await dbContext.ImportBatches.SingleOrDefaultAsync(
             value => value.Id == importBatchId,
