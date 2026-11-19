@@ -1,6 +1,6 @@
 # Northstar Payroll Compliance Lab
 
-Northstar is a brand-neutral study application for tracing and reviewing a realistic payroll-compliance workflow. It uses synthetic data and fictional rules only.
+Northstar is a mock app for my own practice. It is not a real product or company, and all data and rules are made up. I had it created with known bugs for me to try to solve: they are in the code-review exercises in `training/`, which are never merged into `main`.
 
 The current repository contains the calculation slice plus the Phase 3 provider-import study slice:
 
